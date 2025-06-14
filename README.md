@@ -299,4 +299,3 @@ The UI uses a custom **Zinc/Slate dark theme** with:
 - **Color Palette**: Blue accents (`#b0c6ff`), violet secondary (`#d0bcff`), cyan highlights
 - **Glass Panels**: Semi-transparent surfaces with subtle border treatments
 - **Animations**: Spring-based Framer Motion transitions throughout
-
