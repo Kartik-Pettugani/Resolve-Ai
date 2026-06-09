@@ -1,0 +1,29 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js build output and caches
+/.next/
+/out/
+/build
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local configuration env files
+.env*.local
+.env.local
+
+# Vercel
+.vercel
+
+# SQLite database files and SQLite temp journals
+/data/*.db
+/data/*.db-journal
+/data/*.db-wal
+/data/*.db-shm
+data/support_agent.db
