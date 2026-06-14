@@ -12,6 +12,6 @@ export async function DELETE(request) {
   if (!docId) {
     return NextResponse.json({ error: "id query param is required" }, { status: 400 });
   }
-  deleteDocument(docId);
+  await deleteDocument(docId);
   return NextResponse.json({ status: "success", message: `Document ${docId} deleted.` });
 }

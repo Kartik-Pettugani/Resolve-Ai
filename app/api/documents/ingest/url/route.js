@@ -32,7 +32,7 @@ export async function POST(request) {
     }
 
     addDocument({ id: docId, name, type: "url", content: text });
-    addChunks(dbChunks);
+    await addChunks(dbChunks);
 
     return NextResponse.json({ status: "success", document_id: docId, chunks_count: chunks.length });
   } catch (error) {

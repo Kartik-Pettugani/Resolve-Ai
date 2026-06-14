@@ -18,7 +18,8 @@ export async function POST(request) {
     const text = await extractTextFromFile(name, buffer);
     const chunks = splitTextIntoChunks(text);
 
-    const docType = name.toLowerCase().endsWith(".pdf") ? "pdf" : "md";
+    const lname = name.toLowerCase();
+    const docType = lname.endsWith(".pdf") ? "pdf" : lname.endsWith(".md") || lname.endsWith(".markdown") ? "md" : "txt";
     const docId = createDocId(`${name}:${text.slice(0, 400)}`);
 
     const dbChunks = [];
@@ -34,7 +35,7 @@ export async function POST(request) {
     }
 
     addDocument({ id: docId, name, type: docType, content: text });
-    addChunks(dbChunks);
+    await addChunks(dbChunks);
 
     return NextResponse.json({ status: "success", document_id: docId, chunks_count: chunks.length });
   } catch (error) {
