@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from "framer-motion";
 import {
   LayoutDashboard, MessageSquare, Users, BookOpen,
-  BarChart2, Search, Settings, Zap, TrendingUp, TrendingDown,
+  BarChart2, Settings, Zap, TrendingUp, TrendingDown,
   CheckCircle, Trash2, Globe, FileText, FileCode,
-  Upload, Link, ThumbsUp, ThumbsDown, Info, AlertCircle,
+  Upload, ThumbsUp, ThumbsDown, Info, AlertCircle,
   AlertTriangle, Filter, Sparkles,
-  Clock, Activity, Menu, X,
+  Clock, Activity, Menu, X, UserCircle2,
 } from "lucide-react";
 import LogoComponent from "@/components/Logo";
 
@@ -241,7 +241,6 @@ export default function AdminDashboard() {
   const [uploading,     setUploading]     = useState(false);
   const [ingesting,     setIngesting]     = useState(false);
   const [toasts,        setToasts]        = useState([]);
-  const [searchVal,     setSearchVal]     = useState("");
   const [replies,       setReplies]       = useState({});
   const [sendingReply,  setSendingReply]  = useState({});
   const [mobileSb,      setMobileSb]      = useState(false);
@@ -358,6 +357,7 @@ export default function AdminDashboard() {
   const pendingCount = pending.length;
   const displayThresh = pendingThresh ?? threshold;
 
+
   /* CSAT: simple ratio from feedback */
   const up   = metrics?.feedback?.thumbs_up   || 0;
   const down = metrics?.feedback?.thumbs_down || 0;
@@ -453,16 +453,6 @@ export default function AdminDashboard() {
             {mobileSb ? <X size={20} /> : <Menu size={20} />}
           </button>
 
-          {/* Search */}
-          <div className="admin-hdr-search">
-            <span className="admin-hdr-search-icon"><Search size={14} /></span>
-            <input
-              value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-              placeholder="Search analytics, tickets, customers..."
-            />
-          </div>
-
           {/* Tabs */}
           <div className="admin-hdr-tabs">
             {[
@@ -481,13 +471,8 @@ export default function AdminDashboard() {
 
           {/* Right actions */}
           <div className="admin-hdr-actions">
-            {/* User */}
-            <div className="admin-hdr-user">
-              <div className="admin-hdr-avatar">AR</div>
-              <div className="admin-hdr-user-info">
-                <div className="admin-hdr-user-name">Alex Rivers</div>
-                <div className="admin-hdr-user-role">System Admin</div>
-              </div>
+            <div className="admin-hdr-avatar-wrap">
+              <UserCircle2 size={32} strokeWidth={1.5} />
             </div>
           </div>
         </motion.header>
@@ -950,22 +935,18 @@ export default function AdminDashboard() {
               </motion.div>
 
               {/* Upload zone */}
-              <motion.label
-                className="kb-upload-zone"
-                htmlFor="file-upload"
-                variants={fadeUp}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: .99 }}
-              >
-                <motion.div style={{ color: "var(--primary)", marginBottom: 8 }}
-                  animate={uploading ? { rotate: 360 } : { rotate: 0 }}
-                  transition={uploading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}>
-                  <Upload size={28} />
-                </motion.div>
-                <p>{uploading ? "Processing document…" : "Click to upload a file"}</p>
-                <span>PDF · Markdown · Plain text</span>
-                <input id="file-upload" ref={fileRef} type="file" accept=".pdf,.md,.txt,.markdown" onChange={uploadFile} disabled={uploading} />
-              </motion.label>
+              <motion.div variants={fadeUp}>
+                <label className="kb-upload-zone" htmlFor="file-upload">
+                  <motion.div style={{ color: "var(--primary)", marginBottom: 8 }}
+                    animate={uploading ? { rotate: 360 } : { rotate: 0 }}
+                    transition={uploading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}>
+                    <Upload size={28} />
+                  </motion.div>
+                  <p>{uploading ? "Processing document…" : "Click to upload a file"}</p>
+                  <span>PDF · Markdown · Plain text</span>
+                  <input id="file-upload" ref={fileRef} type="file" accept=".pdf,.md,.txt,.markdown" onChange={uploadFile} disabled={uploading} />
+                </label>
+              </motion.div>
 
               {/* URL ingest */}
               <motion.div className="card" style={{ marginBottom: 20 }} variants={fadeUp}>

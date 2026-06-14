@@ -154,57 +154,8 @@ export default function ChatInterface({ sessionId }) {
   const isHuman  = status === "human";
   const hasMessages = messages.length > 0 || sending;
 
-  /* ─── Shared input component ──────────────────── */
-  const InputBar = () => (
-    <div className="chat-input-zone">
-      <form
-        className="composer-v2"
-        onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
-      >
-        <textarea
-          ref={textareaRef}
-          className="composer-v2-input"
-          value={input}
-          onChange={(e) => {
-            if (e.target.value.length <= MAX_CHARS) setInput(e.target.value);
-          }}
-          onKeyDown={handleKeyDown}
-          rows={1}
-          placeholder={isHuman ? "Human agent connected — type a message…" : "Message Resolve AI..."}
-          disabled={sending}
-          style={{ overflow: "hidden" }}
-          onInput={(e) => {
-            e.target.style.height = "auto";
-            e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
-          }}
-        />
-        <motion.button
-          type="submit"
-          className="composer-v2-send"
-          disabled={sending || !input.trim()}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: .92 }}
-          aria-label="Send"
-        >
-          <ChevronRight size={16} />
-        </motion.button>
-      </form>
-      <div className="composer-v2-footer">
-        <span className="engine-label">
-          <Zap size={8} /> Resolve-v2 Engine
-        </span>
-        <span className="char-count-label">{input.length}/{MAX_CHARS}</span>
-      </div>
-      {!hasMessages && (
-        <p className="disclaimer-v2">
-          AI may display inaccurate info. Always check important facts.
-        </p>
-      )}
-    </div>
-  );
-
-  /* ─── Top navigation ──────────────────────────── */
-  const TopNav = () => (
+  /* ─── Top navigation JSX (inlined — never a component) ── */
+  const topNav = (
     <div className="chat-topnav">
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <div style={{ width: 28, height: 28, borderRadius: 7, overflow: "hidden", flexShrink: 0 }}>
@@ -255,11 +206,58 @@ export default function ChatInterface({ sessionId }) {
     </div>
   );
 
+  /* ─── Composer input JSX (inlined — never a component) ── */
+  const composerBar = (
+    <div className="chat-input-zone">
+      <form
+        className="composer-v2"
+        onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
+      >
+        <textarea
+          ref={textareaRef}
+          className="composer-v2-input"
+          value={input}
+          onChange={(e) => {
+            if (e.target.value.length <= MAX_CHARS) setInput(e.target.value);
+          }}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          placeholder={isHuman ? "Human agent connected — type a message…" : "Message Resolve AI..."}
+          disabled={sending}
+          style={{ overflow: "hidden" }}
+          onInput={(e) => {
+            e.target.style.height = "auto";
+            e.target.style.height = Math.min(e.target.scrollHeight, 160) + "px";
+          }}
+        />
+        <motion.button
+          type="submit"
+          className="composer-v2-send"
+          disabled={sending || !input.trim()}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: .92 }}
+          aria-label="Send"
+        >
+          <ChevronRight size={16} />
+        </motion.button>
+      </form>
+      <div className="composer-v2-footer">
+        <span className="engine-label">
+          <Zap size={8} /> Resolve-v2 Engine
+        </span>
+        <span className="char-count-label">{input.length}/{MAX_CHARS}</span>
+      </div>
+      <p className="disclaimer-v2">
+        AI may display inaccurate info. Always check important facts.
+      </p>
+    </div>
+  );
+
   /* ─── Welcome / empty state ───────────────────── */
   if (!hasMessages) {
     return (
       <>
-        <TopNav />
+        {topNav}
         <div className="chat-welcome-wrap">
           <div className="chat-welcome-inner">
             <motion.div
@@ -335,7 +333,7 @@ export default function ChatInterface({ sessionId }) {
             </motion.div>
           </div>
 
-          <InputBar />
+          {composerBar}
         </div>
 
         <Toasts toasts={toasts} />
@@ -346,7 +344,7 @@ export default function ChatInterface({ sessionId }) {
   /* ─── Active chat ─────────────────────────────── */
   return (
     <>
-      <TopNav />
+      {topNav}
 
       <div className="chat-active-wrap">
         <div className="chat-active-inner">
@@ -396,7 +394,9 @@ export default function ChatInterface({ sessionId }) {
               <motion.div variants={listVariants} initial="hidden" animate="show" style={{ display: "contents" }}>
                 {messages.map((msg) => (
                   <motion.div
-                    key={msg.id}
+                    key={msg.sender === "user"
+                      ? `u-${msg.content.slice(0, 60)}-${(msg.timestamp || "").slice(0, 16)}`
+                      : msg.id}
                     className={`msg msg-${msg.sender}`}
                     variants={msgVariants}
                     layout
