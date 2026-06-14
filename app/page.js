@@ -1,39 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import ChatInterface from "@/components/ChatInterface";
+import BackgroundOrbs from "@/components/BackgroundOrbs";
 
-function getSessionId() {
-  let sessionId = window.localStorage.getItem("support_session_id");
-  if (!sessionId) {
-    sessionId = `session_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-    window.localStorage.setItem("support_session_id", sessionId);
+function genSessionId() {
+  let id = window.localStorage.getItem("resolve_session_id");
+  if (!id) {
+    id = `s_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+    window.localStorage.setItem("resolve_session_id", id);
   }
-  return sessionId;
+  return id;
 }
 
 export default function HomePage() {
   const [sessionId, setSessionId] = useState("");
-
-  useEffect(() => {
-    setSessionId(getSessionId());
-  }, []);
+  useEffect(() => setSessionId(genSessionId()), []);
 
   return (
-    <main className="shell">
-      <header className="topbar glass">
-        <div className="brand-wrap">
-          <h1>Resolve</h1>
-        </div>
-        <div className="nav-right">
-          <Link href="/admin" className="outline-btn">Open Admin</Link>
-        </div>
-      </header>
-
-      <div className="chat-container">
-        <ChatInterface sessionId={sessionId} />
-      </div>
-    </main>
+    <div className="chat-root">
+      <BackgroundOrbs />
+      {sessionId && <ChatInterface sessionId={sessionId} />}
+    </div>
   );
 }
