@@ -1,22 +1,13 @@
 import { jwtVerify } from "jose";
 import { NextResponse } from "next/server";
+import { rateLimit } from "./lib/rateLimit.mjs";
 
-/**
- * In-memory sliding-window rate limiter.
- *
- * Protects the public, LLM-backed endpoints from abuse and cost runaway.
- * State lives in a module-level Map, so it is per-instance — adequate for a
- * single runtime, but a shared store (Redis / Upstash) should back this in a
- * multi-instance production deployment.
- */
+// Limits for the public, LLM-backed endpoints (configurable via env).
 const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX) || 20;
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 60_000;
 
 // Paths whose requests count against the rate limit.
 const RATE_LIMITED_PREFIXES = ["/api/chat", "/api/documents/ingest"];
-
-// key -> array of request timestamps (ms) within the current window
-const rateLimitHits = new Map();
 
 function isRateLimited(pathname) {
   return RATE_LIMITED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -28,32 +19,14 @@ function clientKey(request) {
   return request.headers.get("x-real-ip") || "unknown";
 }
 
-/**
- * Records a hit for `key` and returns the limiter decision.
- * @returns {{ limited: boolean, retryAfter: number }}
- */
-function checkRateLimit(key) {
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW_MS;
-
-  const recent = (rateLimitHits.get(key) || []).filter((ts) => ts > windowStart);
-
-  if (recent.length >= RATE_LIMIT_MAX) {
-    const retryAfter = Math.ceil((recent[0] + RATE_LIMIT_WINDOW_MS - now) / 1000);
-    rateLimitHits.set(key, recent);
-    return { limited: true, retryAfter: Math.max(retryAfter, 1) };
-  }
-
-  recent.push(now);
-  rateLimitHits.set(key, recent);
-  return { limited: false, retryAfter: 0 };
-}
-
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
   if (isRateLimited(pathname)) {
-    const { limited, retryAfter } = checkRateLimit(clientKey(request));
+    const { limited, retryAfter } = rateLimit(clientKey(request), {
+      max: RATE_LIMIT_MAX,
+      windowMs: RATE_LIMIT_WINDOW_MS,
+    });
     if (limited) {
       return NextResponse.json(
         {
