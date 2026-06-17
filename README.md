@@ -1,85 +1,310 @@
-# Resolve — Intelligent Customer Support Console
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-15.3-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19.1-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React" />
+  <img src="https://img.shields.io/badge/Gemini_2.5_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/Qdrant-FF6B6B?style=for-the-badge&logo=databricks&logoColor=white" alt="Qdrant" />
+  <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
+</p>
 
-Resolve is a full-stack Next.js support platform that combines a context-aware Retrieval-Augmented Generation (RAG) chatbot with dynamic confidence monitoring and real-time human-agent escalation.
+<h1 align="center">Resolve AI</h1>
+<p align="center">
+  <strong>Intelligent Customer Support Console</strong><br/>
+  <em>A context-aware RAG chatbot with confidence-based escalation, live chat handoff, and a real-time admin analytics dashboard.</em>
+</p>
 
-It features a premium, Zinc/Slate dark theme (`Inter` typography, blue accents, and polished glass panels) and is equipped with multi-provider AI support and vector database storage.
-
----
-
-## Key Features
-
-- **Operations Console Grid:** Unified workspace organizing **Analytics Snapshot**, **Confidence Threshold** settings, **Escalation Queue**, **Knowledge Base Management**, and **Top Unanswered Patterns** inside responsive cards.
-- **RAG Confidence Escalations:** Parses similarity scores and auto-escalates to human support if below threshold.
-- **Dynamic Model Provider Routing:**
-  - **Gemini (`gemini-2.5-flash`):** Primary agent generator using `@google/genai`.
-  - **Groq (`llama-3.1-8b-instant`):** Fallback agent using the OpenAI-compatible SDK endpoint.
-  - **Local Template Answer Generator:** Fallback when API keys are not present.
-- **Qdrant Vector Database Integration:** Chunks are vectorized using `@xenova/transformers` (`all-MiniLM-L6-v2`) and indexed in Qdrant's `support_chunks` collection (using cosine similarity).
-- **SQLite Local Fallback:** Retains a robust local SQLite memory scanning RAG pipeline if Qdrant is not configured.
-- **Human Agent override:** Support specialists can resolve escalations from the console, re-routing conversation control back to AI.
-- **Feedback Loop:** Positive (+1) and negative (-1) thumbs on AI responses.
-
----
-
-## Technology Stack
-
-- **Framework:** Next.js (App Router, React server components)
-- **Database:** SQLite (`better-sqlite3`) for relational session data, logs, and document metadata.
-- **Vector Database:** Qdrant Cloud/Local REST client (`@qdrant/js-client-rest`).
-- **Styling:** Zinc/Slate vanilla CSS theme (`app/globals.css`).
+<p align="center">
+  <a href="#-core-features">Features</a> •
+  <a href="#%EF%B8%8F-architecture">Architecture</a> •
+  <a href="#-technology-stack">Tech Stack</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-api-reference">API Reference</a> •
+  <a href="#-project-structure">Project Structure</a>
+</p>
 
 ---
 
-## Local Development Setup
+## 📋 Overview
 
-### 1. Environment Configuration
+Support teams spend **60–80% of their time** answering the same 20 questions. **Resolve AI** replaces Tier-1 support with a context-aware agent that triages incoming requests, resolves common issues autonomously, and escalates edge cases to human specialists with a complete context summary — so the human agent never has to re-read the entire thread.
 
-Create a `.env.local` file in the root directory:
+Built as a full-stack **Next.js 15** application, Resolve combines:
+- A **Retrieval-Augmented Generation (RAG)** pipeline over a product knowledge base
+- **Confidence-based escalation** logic with structured handoff summaries
+- A premium **live chat interface** with real-time AI ↔ Human state transitions
+- An **admin analytics panel** showing query volume, resolution rate, topic distribution, and feedback metrics
 
-```env
-# Gemini API Key (Primary Model)
-GEMINI_API_KEY="your-gemini-api-key"
+---
 
-# Groq API Key (Fallback Model)
-GROQ_API_KEY="your-groq-api-key"
+## ✨ Core Features
 
-# Optional: Qdrant Vector DB Configuration
-QDRANT_URL="https://your-qdrant-cluster-url.aws.qdrant.io:6333"
-QDRANT_API_KEY="your-qdrant-api-key"
+### 1. RAG Knowledge Base
+Ingest product docs, FAQs, and past resolved tickets. Documents are chunked with sentence-level splitting + overlap, vectorized using **MiniLM-L6-v2** (384-dim embeddings), and indexed in **Qdrant** with cosine similarity search.
+
+| Ingestion Method | Supported Formats |
+|---|---|
+| File Upload | PDF, Markdown (`.md`), Plain Text (`.txt`) |
+| URL Scraping | Any public HTML page (via Cheerio) |
+
+### 2. Multi-Turn Memory
+Full conversation context is maintained within each session. The system detects pronominal references (*"it"*, *"that"*, *"this"*, *"those"*) in follow-up questions and automatically rewrites the query with prior context — no need for the user to repeat themselves.
+
+### 3. Confidence-Based Escalation
+When retrieval confidence falls below a configurable threshold, the system:
+- Auto-escalates to a human agent
+- Generates a **structured handoff summary** containing: topic classification, escalation reason, session ID, last user query, and the last 8 conversation turns
+- Detects **out-of-scope queries** (weather, sports, recipes, legal/medical advice, etc.) and routes them separately
+
+### 4. Live Chat Interface
+A polished web-based chat with:
+- **Typing indicators** with animated dots
+- **Message timestamps** on every bubble
+- **Visual state badges** — `AI online` (green pulse) vs `Human connected` (violet pulse)
+- **Framer Motion** micro-animations for message entry, welcome screen, and toast notifications
+- **Starter prompts** for common query categories
+
+### 5. Admin Analytics Panel
+A full operations dashboard with:
+
+| Panel | What It Shows |
+|---|---|
+| **KPI Cards** | Total sessions, total queries, AI resolution rate, CSAT score (with sparklines) |
+| **Query Analytics** | 7-day bar chart of query volume trends |
+| **Sentiment Pulse** | Donut chart of thumbs-up vs thumbs-down feedback |
+| **Escalation Queue** | Active/resolved tickets with priority, sentiment, topic, and reply-to-resolve workflow |
+| **Escalation by Topic** | Horizontal bar chart showing frequency distribution across classified topics |
+| **Knowledge Base** | Document list with file upload zone and URL ingestion panel |
+| **Settings** | Confidence threshold slider with real-time persist |
+
+### 6. Feedback Loop
+Thumbs-up (`+1`) and thumbs-down (`-1`) on every AI response. **Negative feedback automatically creates an escalation ticket** tagged `negative_feedback` for knowledge base review and improvement.
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Frontend (React 19)                  │
+│  ┌──────────────────┐    ┌────────────────────────────┐ │
+│  │   Chat Interface │    │   Admin Operations Console │ │
+│  │  (Framer Motion) │    │  (Dashboard / KB / Config) │ │
+│  └────────┬─────────┘    └─────────────┬──────────────┘ │
+├───────────┼────────────────────────────┼────────────────┤
+│           │     Next.js App Router     │                │
+│  ┌────────▼────────┐  ┌───────────────▼──────────────┐  │
+│  │  /api/chat       │  │  /api/admin/metrics          │  │
+│  │  /api/chat/hist. │  │  /api/admin/escalations      │  │
+│  │  /api/chat/fdbk  │  │  /api/admin/config           │  │
+│  │  /api/documents  │  │  /api/admin/messages          │  │
+│  └────────┬─────────┘  └───────────────┬──────────────┘  │
+├───────────┼────────────────────────────┼────────────────┤
+│           │        Core Engine         │                │
+│  ┌────────▼────────────────────────────▼──────────────┐  │
+│  │               RAG Pipeline (lib/rag.js)            │  │
+│  │  Query Rewrite → Embed → Search → Generate → Store │  │
+│  └───┬──────────┬──────────────┬──────────────────────┘  │
+│      │          │              │                         │
+│  ┌───▼────┐ ┌───▼──────┐ ┌────▼───────┐                │
+│  │ Gemini │ │   Groq   │ │  Template  │   LLM Cascade  │
+│  │ 2.5    │ │  Llama   │ │  Fallback  │   (auto-retry) │
+│  │ Flash  │ │  3.1-8B  │ │            │                │
+│  └────────┘ └──────────┘ └────────────┘                │
+├────────────────────────────────────────────────────────┤
+│                     Storage Layer                      │
+│  ┌────────────────────┐  ┌──────────────────────────┐  │
+│  │  Qdrant Cloud/Local│  │  SQLite (better-sqlite3) │  │
+│  │  (Vector Search)   │  │  (Sessions, Messages,    │  │
+│  │  support_chunks    │  │   Escalations, Docs,     │  │
+│  │  384-dim / Cosine  │  │   Chunks, Settings)      │  │
+│  └────────────────────┘  └──────────────────────────┘  │
+└────────────────────────────────────────────────────────┘
 ```
 
-### 2. Run the Server
+### LLM Provider Cascade
+
+The system uses a **three-tier fallback chain** to guarantee a response is always generated:
+
+1. **Gemini 2.5 Flash** (primary) — via `@google/genai`
+2. **Groq Llama 3.1-8B-Instant** (fallback) — via OpenAI-compatible SDK
+3. **Template Answer Generator** (offline fallback) — extracts the best matching chunk directly when no API keys are configured
+
+---
+
+## 🔧 Technology Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Framework** | Next.js 15 (App Router) | Full-stack React framework with file-based API routes |
+| **Frontend** | React 19, Framer Motion | UI rendering with fluid micro-animations |
+| **Styling** | Vanilla CSS (Dark Zinc/Slate theme) | Custom design system with Inter + Geist + JetBrains Mono typography |
+| **Primary LLM** | Google Gemini 2.5 Flash | Response generation with grounded context |
+| **Fallback LLM** | Groq (Llama 3.1-8B-Instant) | OpenAI-compatible fallback endpoint |
+| **Embeddings** | Xenova/all-MiniLM-L6-v2 | 384-dimensional sentence embeddings (runs locally) |
+| **Vector DB** | Qdrant (Cloud or Local) | Cosine similarity search over document chunks |
+| **Relational DB** | SQLite (better-sqlite3) | Sessions, messages, escalations, documents, settings |
+| **PDF Parsing** | pdf-parse | Extract text from uploaded PDF files |
+| **Web Scraping** | Cheerio | Extract content from documentation URLs |
+| **Icons** | Lucide React | Consistent icon system across the UI |
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- **Node.js** ≥ 18.x
+- **npm** ≥ 9.x
+- At least one API key (Gemini or Groq) for AI-powered responses
+
+### 1. Clone the Repository
 
 ```bash
-# Install dependencies
-npm install
+git clone https://github.com/Kartik-Pettugani/Resolve-Ai.git
+cd Resolve-Ai
+```
 
-# Run the local Next.js development server
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Configure Environment
+
+Copy the example environment file and add your API keys:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Edit `.env.local`:
+
+```env
+# Required — at least one AI provider
+GEMINI_API_KEY=your_gemini_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
+
+# Optional — Qdrant for production-grade vector search
+QDRANT_URL=https://your-cluster.aws.qdrant.io:6333
+QDRANT_API_KEY=your_qdrant_api_key_here
+```
+
+> **Note:** If no API keys are provided, the system falls back to a template-based answer generator using the best-matching knowledge base chunk.
+
+### 4. Start the Development Server
+
+```bash
 npm run dev
 ```
 
-The server will spin up on:
-- Customer Support Chat: `http://localhost:3000` (or `http://localhost:3001`)
-- Resolve Operations Console: `/admin`
+### 5. Access the Application
+
+| Interface | URL |
+|---|---|
+| **Customer Chat** | [http://localhost:3000](http://localhost:3000) |
+| **Admin Console** | [http://localhost:3000/admin](http://localhost:3000/admin) |
 
 ---
 
-## API Routes Index
+## 📡 API Reference
 
-### Customer & Chat
-* `POST /api/chat` — Processes user inputs, performs semantic searches, and generates responses (or triggers human escalation).
-* `GET /api/chat/history?session_id=...` — Returns the conversation message history and the active session agent mode.
-* `POST /api/chat/feedback` — Submits thumbs up (+1) or thumbs down (-1) feedback values for a specific response.
+### Chat & Messaging
 
-### Knowledge Base Ingestion
-* `GET /api/documents` — Lists all indexed documents with their name, type, indexing time, and vector chunk counts.
-* `DELETE /api/documents?id=...` — Removes a document and prunes its associated chunks from Qdrant/SQLite.
-* `POST /api/documents/ingest/file` — Ingests and vectorizes an uploaded document file (PDF, TXT, MD).
-* `POST /api/documents/ingest/url` — Scrapes, chunks, and indexes a documentation URL.
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/chat` | Process a user message — performs semantic search, generates a response (or triggers escalation) |
+| `GET` | `/api/chat/history?session_id=...` | Retrieve conversation history and current agent mode for a session |
+| `POST` | `/api/chat/feedback` | Submit thumbs-up (`+1`) or thumbs-down (`-1`) feedback for an AI response |
 
-### Operations Console
-* `GET /api/admin/metrics` — Aggregates live session counts, queries, escalation ratios, topic distributions, and feedback metrics.
-* `GET /api/admin/escalations` — Lists escalated tickets, reasons, summaries, and status states.
-* `POST /api/admin/escalations/:sessionId/resolve` — Resolves human handoffs and re-routes session control back to AI.
-* `GET /api/admin/config` — Retrieves the current RAG confidence score settings.
-* `POST /api/admin/config` — Updates the minimum retrieval confidence score threshold.
+### Knowledge Base
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/documents` | List all indexed documents with metadata |
+| `DELETE` | `/api/documents?id=...` | Delete a document and prune its vector chunks |
+| `POST` | `/api/documents/ingest/file` | Upload and vectorize a document file (PDF, TXT, MD) |
+| `POST` | `/api/documents/ingest/url` | Scrape, chunk, and index a documentation URL |
+
+### Admin Operations
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/admin/metrics` | Aggregate analytics: sessions, queries, escalation ratios, topic distribution, feedback |
+| `GET` | `/api/admin/escalations` | List all escalated tickets with status, reason, and summary |
+| `POST` | `/api/admin/escalations/:sessionId/resolve` | Resolve an escalation and return session control to AI |
+| `POST` | `/api/admin/escalations/:sessionId/reply` | Send a human reply to the user and auto-resolve the escalation |
+| `GET` | `/api/admin/config` | Retrieve the current RAG confidence threshold |
+| `POST` | `/api/admin/config` | Update the minimum retrieval confidence threshold |
+
+---
+
+## 📁 Project Structure
+
+```
+resolve-ai/
+├── app/
+│   ├── layout.js                 # Root layout with font imports
+│   ├── page.js                   # Chat page (session management)
+│   ├── globals.css               # Design system (Zinc/Slate dark theme)
+│   ├── admin/
+│   │   └── page.js               # Admin dashboard page
+│   └── api/
+│       ├── chat/
+│       │   ├── route.js          # POST — process user message
+│       │   ├── history/route.js  # GET  — session message history
+│       │   └── feedback/route.js # POST — thumbs up/down
+│       ├── documents/
+│       │   ├── route.js          # GET/DELETE — document CRUD
+│       │   └── ingest/
+│       │       ├── file/route.js # POST — file upload ingestion
+│       │       └── url/route.js  # POST — URL scraping ingestion
+│       ├── admin/
+│       │   ├── metrics/route.js  # GET — analytics aggregation
+│       │   ├── escalations/
+│       │   │   ├── route.js      # GET — list escalations
+│       │   │   └── [sessionId]/
+│       │   │       ├── resolve/route.js # POST — resolve ticket
+│       │   │       └── reply/route.js   # POST — reply & resolve
+│       │   ├── config/route.js   # GET/POST — confidence threshold
+│       │   └── messages/route.js # POST — admin message injection
+│       └── health/route.js       # GET — health check
+├── components/
+│   ├── ChatInterface.jsx         # Live chat UI component
+│   ├── AdminDashboard.jsx        # Full admin operations panel
+│   ├── BackgroundOrbs.jsx        # Ambient animated background
+│   └── Logo.jsx                  # Brand logo component
+├── lib/
+│   ├── rag.js                    # RAG pipeline: embed, retrieve, generate
+│   ├── db.js                     # SQLite schema, CRUD, analytics queries
+│   ├── qdrant.js                 # Qdrant client: upsert, search, delete
+│   └── ingestion.js              # Text extraction, chunking, doc ID generation
+├── data/
+│   └── support_agent.db          # SQLite database (auto-created, gitignored)
+├── .env.local.example            # Environment variable template
+├── instrumentation.js            # Next.js instrumentation hook
+├── next.config.mjs               # Next.js configuration
+└── package.json                  # Dependencies and scripts
+```
+
+---
+
+## 🎨 Design System
+
+The UI uses a custom **Zinc/Slate dark theme** with:
+
+- **Typography**: Geist (headings), Inter (body), JetBrains Mono (code/badges)
+- **Color Palette**: Blue accents (`#b0c6ff`), violet secondary (`#d0bcff`), cyan highlights
+- **Glass Panels**: Semi-transparent surfaces with subtle border treatments
+- **Animations**: Spring-based Framer Motion transitions throughout
+
+---
+
+## 📄 License
+
+This project was built as part of **Assignment 1 — AI-Powered Customer Support Agent** (GenAI Course).
+
+---
+
+<p align="center">
+  Built with ❤️ using Next.js, Gemini, and Qdrant
+</p>
