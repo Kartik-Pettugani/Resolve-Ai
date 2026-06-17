@@ -22,18 +22,28 @@ function clientKey(request) {
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
+  // Standard rate-limit headers to surface on responses for limited paths.
+  let rateLimitHeaders = null;
   if (isRateLimited(pathname)) {
-    const { limited, retryAfter } = rateLimit(clientKey(request), {
+    const rl = rateLimit(clientKey(request), {
       max: RATE_LIMIT_MAX,
       windowMs: RATE_LIMIT_WINDOW_MS,
     });
-    if (limited) {
+    rateLimitHeaders = {
+      "X-RateLimit-Limit": String(rl.limit),
+      "X-RateLimit-Remaining": String(rl.remaining),
+      "X-RateLimit-Reset": String(Math.ceil(rl.reset / 1000)),
+    };
+    if (rl.limited) {
       return NextResponse.json(
         {
           error: "Too many requests. Please slow down and try again shortly.",
-          retryAfter,
+          retryAfter: rl.retryAfter,
         },
-        { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        {
+          status: 429,
+          headers: { ...rateLimitHeaders, "Retry-After": String(rl.retryAfter) },
+        }
       );
     }
   }
@@ -66,7 +76,13 @@ export async function middleware(request) {
       }
     }
 
-    return NextResponse.next();
+    const response = NextResponse.next();
+    if (rateLimitHeaders) {
+      for (const [key, value] of Object.entries(rateLimitHeaders)) {
+        response.headers.set(key, value);
+      }
+    }
+    return response;
   } catch (err) {
     if (pathname.startsWith("/api/")) {
       const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });

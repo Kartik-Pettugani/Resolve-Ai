@@ -242,6 +242,43 @@ npm run dev
 
 ---
 
+## 🛡️ Rate Limiting
+
+The public, LLM-backed endpoints are protected by a per-IP **sliding-window
+rate limiter** (`lib/rateLimit.mjs`, enforced in `middleware.js`) to guard
+against abuse and runaway API costs.
+
+| Endpoint(s) | Limited |
+|---|---|
+| `POST /api/chat` and sub-routes | ✅ |
+| `POST /api/documents/ingest/*` | ✅ |
+| All other routes | — |
+
+**Configuration** (`.env.local`):
+
+```env
+RATE_LIMIT_MAX=20          # max requests per client per window (default 20)
+RATE_LIMIT_WINDOW_MS=60000 # window length in ms (default 60000 = 1 min)
+```
+
+Every limited response carries standard headers:
+
+| Header | Meaning |
+|---|---|
+| `X-RateLimit-Limit` | Max requests allowed in the window |
+| `X-RateLimit-Remaining` | Requests remaining in the current window |
+| `X-RateLimit-Reset` | Unix epoch (seconds) when the window resets |
+| `Retry-After` | Seconds to wait before retrying (on `429` only) |
+
+When the limit is exceeded the API responds with `429 Too Many Requests` and a
+JSON body `{ "error": "...", "retryAfter": <seconds> }`.
+
+> **Note:** Limiter state is in-memory and per-instance — ideal for a single
+> runtime. For a multi-instance deployment, back it with a shared store
+> (Redis / Upstash). The logic is unit-tested via `npm test`.
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -281,7 +318,9 @@ resolve-ai/
 │   ├── rag.js                    # RAG pipeline: embed, retrieve, generate
 │   ├── db.js                     # Turso/libSQL client: schema, CRUD, analytics queries
 │   ├── qdrant.js                 # Qdrant client: upsert, search, delete
-│   └── ingestion.js              # Text extraction, chunking, doc ID generation
+│   ├── ingestion.js              # Text extraction, chunking, doc ID generation
+│   ├── rateLimit.mjs             # Sliding-window rate limiter (per-IP)
+│   └── rateLimit.test.mjs        # Unit tests (node --test)
 ├── data/                          # Local SQLite fallback (when TURSO_DATABASE_URL not set)
 ├── .env.local.example            # Environment variable template
 ├── instrumentation.js            # Next.js instrumentation hook
