@@ -576,6 +576,14 @@ export default function AdminDashboard() {
                     path: "M0,5 Q25,10 50,15 T100,25",
                     sparkColor: "#b0c6ff",
                   },
+                  {
+                    label: "Resolved Queries",
+                    value: fmtNum(metrics?.resolved_escalations),
+                    icon: <CheckCircle size={20} />,
+                    trend: "Verified", trendDir: "up",
+                    path: "M0,10 L25,12 L50,15 L75,22 L100,28",
+                    sparkColor: "#34d399",
+                  },
                 ].map(({ label, value, suffix = "", icon, iconClass, trend, trendDir, path, sparkColor, aiGlow }, i) => (
                   <motion.div
                     key={label}
@@ -739,6 +747,49 @@ export default function AdminDashboard() {
                         <tr>
                           <td colSpan={4} style={{ textAlign: "center", padding: "32px", color: "var(--text-3)", fontFamily: "Inter, sans-serif", fontSize: ".875rem" }}>
                             No feedback activity yet.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+
+              {/* Top Unanswered Questions */}
+              <motion.div className="card" variants={fadeUp} style={{ marginTop: 24 }}>
+                <div className="card-header">
+                  <span className="card-title">
+                    <AlertCircle size={14} style={{ color: "var(--amber)" }} /> Top Unanswered & Low Confidence Questions
+                  </span>
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className="fb-table">
+                    <thead>
+                      <tr>
+                        <th>Unresolved Query</th>
+                        <th>Classified Topic</th>
+                        <th className="right">Escalation Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metrics?.unanswered_queries && metrics.unanswered_queries.length > 0 ? (
+                        metrics.unanswered_queries.map((q, i) => (
+                          <tr key={i} style={{ transition: "all .2s" }}>
+                            <td style={{ fontFamily: "Inter, sans-serif", fontSize: ".875rem", color: "var(--text)" }}>
+                              &ldquo;{q.query}&rdquo;
+                            </td>
+                            <td>
+                              <span className="badge badge-indigo">{q.topic || "General"}</span>
+                            </td>
+                            <td className="right" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: ".875rem", fontWeight: 700, color: "var(--amber)" }}>
+                              {q.count}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} style={{ textAlign: "center", padding: "32px", color: "var(--text-3)", fontFamily: "Inter, sans-serif", fontSize: ".875rem" }}>
+                            No unanswered or low confidence questions recorded.
                           </td>
                         </tr>
                       )}

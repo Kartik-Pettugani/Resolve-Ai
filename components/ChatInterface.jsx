@@ -6,7 +6,7 @@ import {
   Send, ThumbsUp, ThumbsDown, Sparkles, User,
   Zap, CheckCircle, AlertCircle, Info,
   FileText, DollarSign, Package, Settings,
-  ChevronRight, Bot, LogOut,
+  ChevronRight, Bot, LogOut, Plus,
 } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -93,6 +93,11 @@ export default function ChatInterface({ sessionId }) {
       const res = await fetch("/api/logout", { method: "POST" });
       if (res.ok) window.location.reload();
     } catch {}
+  }, []);
+
+  const handleNewConversation = useCallback(() => {
+    localStorage.removeItem("resolve_session_id");
+    window.location.reload();
   }, []);
 
   const scrollBottom = useCallback(() => {
@@ -195,6 +200,26 @@ export default function ChatInterface({ sessionId }) {
         </span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button 
+          onClick={handleNewConversation}
+          className="admin-console-link"
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "6px 14px",
+            background: "rgba(255,255,255,.03)",
+            border: "1px solid var(--border)",
+            borderRadius: 8,
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: ".6875rem",
+            color: "var(--text-2)",
+            cursor: "pointer",
+            transition: "all .15s",
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--border-2)"; e.currentTarget.style.color = "var(--primary)"; }}
+          onMouseOut={(e)  => { e.currentTarget.style.borderColor = "var(--border)";   e.currentTarget.style.color = "var(--text-2)"; }}
+        >
+          <Plus size={12} /> <span>New Chat</span>
+        </button>
         <Link href="/admin" className="admin-console-link" style={{
           display: "flex", alignItems: "center", gap: 6,
           padding: "6px 14px",
