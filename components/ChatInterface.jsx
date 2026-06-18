@@ -6,7 +6,7 @@ import {
   Send, ThumbsUp, ThumbsDown, Sparkles, User,
   Zap, CheckCircle, AlertCircle, Info,
   FileText, DollarSign, Package, Settings,
-  ChevronRight, Bot, LogOut, Plus,
+  ChevronRight, Bot, LogOut, Plus, Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -251,7 +251,7 @@ export default function ChatInterface({ sessionId }) {
           whileTap={{ scale: .92 }}
           aria-label="Send"
         >
-          <ChevronRight size={16} />
+          {sending ? <Loader2 size={16} className="spinner" /> : <ChevronRight size={16} />}
         </motion.button>
       </form>
       <div className="composer-v2-footer">
@@ -491,7 +491,7 @@ export default function ChatInterface({ sessionId }) {
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: .92 }}
               >
-                <ChevronRight size={16} />
+                {sending ? <Loader2 size={16} className="spinner" /> : <ChevronRight size={16} />}
               </motion.button>
             </div>
             <div className="composer-v2-footer" style={{ padding: "5px 2px 0" }}>

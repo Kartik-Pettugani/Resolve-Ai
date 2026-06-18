@@ -268,6 +268,7 @@ export default function AdminDashboard() {
   const [hdrTab,        setHdrTab]        = useState("analytics");
   const [chartPeriod,   setChartPeriod]   = useState("7d");
   const [expandedSession, setExpandedSession] = useState(null);
+  const [reasonFilter,    setReasonFilter]  = useState("all");
   const [escalView,     setEscalView]     = useState("active");
   const [metrics,       setMetrics]       = useState(null);
   const [escalations,   setEscalations]   = useState([]);
@@ -884,25 +885,42 @@ export default function AdminDashboard() {
                     )}
                   </button>
                 ))}
-                <button style={{
-                  marginLeft: "auto",
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "7px 14px",
-                  background: "transparent",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: ".75rem",
-                  color: "var(--text-3)",
-                  cursor: "pointer",
-                }}>
-                  <Filter size={13} /> Filters
-                </button>
+                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+                  <Filter size={13} style={{ color: "var(--text-3)" }} />
+                  <select 
+                    value={reasonFilter}
+                    onChange={(ev) => setReasonFilter(ev.target.value)}
+                    style={{
+                      background: "rgba(255,255,255,.03)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      padding: "6px 14px 6px 10px",
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: ".75rem",
+                      color: "var(--text-2)",
+                      cursor: "pointer",
+                      outline: "none",
+                      appearance: "none",
+                      backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(194,198,216,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 8px center",
+                      backgroundSize: "12px",
+                      paddingRight: "26px"
+                    }}
+                  >
+                    <option value="all" style={{ background: "var(--bg)" }}>All Reasons</option>
+                    <option value="low_confidence" style={{ background: "var(--bg)" }}>Low Confidence</option>
+                    <option value="out_of_scope" style={{ background: "var(--bg)" }}>Out of Scope</option>
+                    <option value="negative_feedback" style={{ background: "var(--bg)" }}>Neg. Feedback</option>
+                  </select>
+                </div>
               </motion.div>
 
               {/* Escalation cards grid */}
               {(() => {
-                const list = escalView === "active" ? pending : resolved;
+                const baseList = escalView === "active" ? pending : resolved;
+                const list = baseList.filter((e) => reasonFilter === "all" || e.reason === reasonFilter);
+
                 if (!list.length) {
                   return (
                     <motion.div variants={fadeUp} className="card" style={{ padding: "48px 24px", textAlign: "center" }}>
