@@ -203,57 +203,15 @@ export default function ChatInterface({ sessionId }) {
         <button 
           onClick={handleNewConversation}
           className="admin-console-link"
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "6px 14px",
-            background: "rgba(255,255,255,.03)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: ".6875rem",
-            color: "var(--text-2)",
-            cursor: "pointer",
-            transition: "all .15s",
-          }}
-          onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--border-2)"; e.currentTarget.style.color = "var(--primary)"; }}
-          onMouseOut={(e)  => { e.currentTarget.style.borderColor = "var(--border)";   e.currentTarget.style.color = "var(--text-2)"; }}
         >
           <Plus size={12} /> <span>New Chat</span>
         </button>
-        <Link href="/admin" className="admin-console-link" style={{
-          display: "flex", alignItems: "center", gap: 6,
-          padding: "6px 14px",
-          background: "rgba(255,255,255,.03)",
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: ".6875rem",
-          color: "var(--text-2)",
-          textDecoration: "none",
-          transition: "all .15s",
-        }}
-          onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--border-2)"; e.currentTarget.style.color = "var(--primary)"; }}
-          onMouseOut={(e)  => { e.currentTarget.style.borderColor = "var(--border)";   e.currentTarget.style.color = "var(--text-2)"; }}
-        >
+        <Link href="/admin" className="admin-console-link">
           <Settings size={12} /> <span>Admin Console</span>
         </Link>
         <button 
           onClick={handleLogout}
-          className="admin-console-link"
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "6px 14px",
-            background: "rgba(255,255,255,.03)",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: ".6875rem",
-            color: "var(--text-2)",
-            cursor: "pointer",
-            transition: "all .15s",
-          }}
-          onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--border-2)"; e.currentTarget.style.color = "var(--red)"; }}
-          onMouseOut={(e)  => { e.currentTarget.style.borderColor = "var(--border)";   e.currentTarget.style.color = "var(--text-2)"; }}
+          className="admin-console-link danger"
         >
           <LogOut size={12} /> <span>Log Out</span>
         </button>
@@ -540,6 +498,9 @@ export default function ChatInterface({ sessionId }) {
               <span className="engine-label"><Zap size={8} /> Resolve-v2 Engine</span>
               <span className="char-count-label">{input.length}/{MAX_CHARS}</span>
             </div>
+            <p className="disclaimer-v2" style={{ marginTop: "4px" }}>
+              AI may display inaccurate info. Always check important facts.
+            </p>
           </div>
         </div>
       </div>

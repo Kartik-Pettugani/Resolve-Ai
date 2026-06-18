@@ -2291,6 +2291,30 @@ textarea.input { resize: none; }
   .stream-table th, .stream-table td { padding: 8px 12px; }
 }
 
+.admin-console-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--text-2);
+  text-decoration: none;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.admin-console-link:hover {
+  border-color: var(--border-2);
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+.admin-console-link.danger:hover {
+  color: var(--red);
+}
+
 /* ══════════════════════════════════════════════
    RESPONSIVE — CHAT
 ══════════════════════════════════════════════ */
