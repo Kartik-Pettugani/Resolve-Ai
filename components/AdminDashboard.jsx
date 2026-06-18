@@ -74,32 +74,68 @@ function Sparkline({ path, color = "#b0c6ff" }) {
 const DAY_KEYS  = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 const MOCK_BARS = [67, 83, 50, 94, 78, 61, 89]; // default visual heights %
 
-function BarChart({ data }) {
+function getBarLabel(dateStr, is30d) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    if (is30d) {
+      return d.toLocaleDateString([], { day: "numeric" });
+    } else {
+      return d.toLocaleDateString([], { weekday: "short" }).toUpperCase();
+    }
+  } catch {
+    return dateStr;
+  }
+}
+
+function BarChart({ data, is30d }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
-  const entries = data ? Object.entries(data).sort(([a], [b]) => a.localeCompare(b)).slice(-7) : [];
+  const limit = is30d ? 30 : 7;
+  const entries = data ? Object.entries(data).sort(([a], [b]) => a.localeCompare(b)).slice(-limit) : [];
   const max = entries.length ? Math.max(...entries.map(([, v]) => v), 1) : 1;
 
+  const barCount = entries.length || limit;
+  const bars = [];
+  for (let i = 0; i < barCount; i++) {
+    if (entries[i]) {
+      const [dateStr, val] = entries[i];
+      bars.push({
+        key: dateStr,
+        label: getBarLabel(dateStr, is30d),
+        count: val,
+        pct: Math.max(5, (val / max) * 100),
+        tooltip: `${dateStr}: ${val} queries`
+      });
+    } else {
+      const mockVal = is30d ? Math.floor(20 + Math.random() * 60) : MOCK_BARS[i];
+      bars.push({
+        key: `mock-${i}`,
+        label: is30d ? String(i + 1) : DAY_KEYS[i],
+        count: mockVal,
+        pct: mockVal,
+        tooltip: is30d ? `Mock day ${i+1}` : DAY_KEYS[i]
+      });
+    }
+  }
+
   return (
-    <div className="bar-chart-wrap" ref={ref}>
-      {DAY_KEYS.map((day, i) => {
-        const count = entries[i]?.[1] || 0;
-        const pct   = entries.length ? Math.max(5, (count / max) * 100) : MOCK_BARS[i];
-        return (
-          <div key={day} className="bar-col">
-            <div className="bar-track">
-              <motion.div
-                className="bar-fill"
-                initial={{ height: "5%" }}
-                animate={inView ? { height: `${pct}%` } : { height: "5%" }}
-                transition={{ delay: i * .05, type: "spring", stiffness: 200, damping: 22 }}
-                title={entries.length ? `${count} queries` : day}
-              />
-            </div>
-            <span className="bar-lbl">{day}</span>
+    <div className="bar-chart-wrap" style={{ gap: is30d ? "4px" : "12px" }} ref={ref}>
+      {bars.map((bar, i) => (
+        <div key={bar.key} className="bar-col">
+          <div className="bar-track">
+            <motion.div
+              className="bar-fill"
+              initial={{ height: "5%" }}
+              animate={inView ? { height: `${bar.pct}%` } : { height: "5%" }}
+              transition={{ delay: i * (is30d ? 0.02 : 0.05), type: "spring", stiffness: 200, damping: 22 }}
+              title={bar.tooltip}
+            />
           </div>
-        );
-      })}
+          <span className="bar-lbl">{bar.label}</span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -230,6 +266,7 @@ const AVATAR_COLORS = [
 export default function AdminDashboard() {
   const [tab,           setTab]           = useState("overview");
   const [hdrTab,        setHdrTab]        = useState("analytics");
+  const [chartPeriod,   setChartPeriod]   = useState("7d");
   const [escalView,     setEscalView]     = useState("active");
   const [metrics,       setMetrics]       = useState(null);
   const [escalations,   setEscalations]   = useState([]);
@@ -262,7 +299,7 @@ export default function AdminDashboard() {
   const loadAll = useCallback(async () => {
     try {
       const [mRes, eRes, dRes, cRes] = await Promise.all([
-        fetch("/api/admin/metrics"),
+        fetch(`/api/admin/metrics?period=${chartPeriod}`),
         fetch("/api/admin/escalations"),
         fetch("/api/documents"),
         fetch("/api/admin/config"),
@@ -272,7 +309,7 @@ export default function AdminDashboard() {
       if (dRes.ok) setDocuments(await dRes.json());
       if (cRes.ok) { const c = await cRes.json(); setThreshold(c.confidence_threshold); }
     } catch {}
-  }, []);
+  }, [chartPeriod]);
 
   useEffect(() => {
     loadAll();
@@ -574,26 +611,37 @@ export default function AdminDashboard() {
                       <BarChart2 size={14} style={{ color: "var(--primary)" }} /> Query Analytics
                     </span>
                     <div style={{ display: "flex", gap: 4 }}>
-                      {["7D", "30D"].map((l, i) => (
-                        <button key={l} style={{
-                          padding: "3px 10px",
-                          fontSize: ".625rem",
-                          fontFamily: "'JetBrains Mono', monospace",
-                          background: i === 0 ? "rgba(84,23,190,.15)" : "transparent",
-                          border: "1px solid",
-                          borderColor: i === 0 ? "rgba(84,23,190,.3)" : "transparent",
-                          borderRadius: 4,
-                          color: i === 0 ? "var(--secondary)" : "var(--text-3)",
-                          cursor: "pointer",
-                        }}>
-                          {l}
-                        </button>
-                      ))}
+                      {[
+                        { id: "7d", label: "7D" },
+                        { id: "30d", label: "30D" }
+                      ].map((item) => {
+                        const active = chartPeriod === item.id;
+                        return (
+                          <button 
+                            key={item.id} 
+                            onClick={() => setChartPeriod(item.id)}
+                            style={{
+                              padding: "3px 10px",
+                              fontSize: ".625rem",
+                              fontFamily: "'JetBrains Mono', monospace",
+                              background: active ? "rgba(84,23,190,.15)" : "transparent",
+                              border: "1px solid",
+                              borderColor: active ? "rgba(84,23,190,.3)" : "transparent",
+                              borderRadius: 4,
+                              color: active ? "var(--secondary)" : "var(--text-3)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="card-body" style={{ minHeight: 220 }}>
-                    <BarChart data={metrics?.query_trend} />
+                    <BarChart data={metrics?.query_trend} is30d={chartPeriod === "30d"} />
                   </div>
+
                 </motion.div>
 
                 {/* Donut chart */}
