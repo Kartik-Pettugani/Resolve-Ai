@@ -71,9 +71,6 @@ function Sparkline({ path, color = "#b0c6ff" }) {
 /* ══════════════════════════════════════════════
    BAR CHART
 ══════════════════════════════════════════════ */
-const DAY_KEYS  = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-const MOCK_BARS = [67, 83, 50, 94, 78, 61, 89]; // default visual heights %
-
 function getBarLabel(dateStr, is30d) {
   if (!dateStr) return "";
   try {
@@ -95,47 +92,34 @@ function BarChart({ data, is30d }) {
   const limit = is30d ? 30 : 7;
   const entries = data ? Object.entries(data).sort(([a], [b]) => a.localeCompare(b)).slice(-limit) : [];
   const max = entries.length ? Math.max(...entries.map(([, v]) => v), 1) : 1;
+  const hasData = entries.length > 0;
 
-  const barCount = entries.length || limit;
-  const bars = [];
-  for (let i = 0; i < barCount; i++) {
-    if (entries[i]) {
-      const [dateStr, val] = entries[i];
-      bars.push({
-        key: dateStr,
-        label: getBarLabel(dateStr, is30d),
-        count: val,
-        pct: Math.max(5, (val / max) * 100),
-        tooltip: `${dateStr}: ${val} queries`
-      });
-    } else {
-      const mockVal = is30d ? Math.floor(20 + Math.random() * 60) : MOCK_BARS[i];
-      bars.push({
-        key: `mock-${i}`,
-        label: is30d ? String(i + 1) : DAY_KEYS[i],
-        count: mockVal,
-        pct: mockVal,
-        tooltip: is30d ? `Mock day ${i+1}` : DAY_KEYS[i]
-      });
-    }
-  }
+  const slots = hasData ? entries : Array.from({ length: limit }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - ((limit - 1) - i));
+    return [d.toISOString().slice(0, 10), 0];
+  });
 
   return (
     <div className="bar-chart-wrap" style={{ gap: is30d ? "4px" : "12px" }} ref={ref}>
-      {bars.map((bar, i) => (
-        <div key={bar.key} className="bar-col">
-          <div className="bar-track">
-            <motion.div
-              className="bar-fill"
-              initial={{ height: "5%" }}
-              animate={inView ? { height: `${bar.pct}%` } : { height: "5%" }}
-              transition={{ delay: i * (is30d ? 0.02 : 0.05), type: "spring", stiffness: 200, damping: 22 }}
-              title={bar.tooltip}
-            />
+      {slots.map(([date, count], i) => {
+        const label = getBarLabel(date, is30d);
+        const pct   = hasData ? Math.max(5, (count / max) * 100) : 5;
+        const tooltip = `${date}: ${count} quer${count === 1 ? "y" : "ies"}`;
+        return (
+          <div key={date} className="bar-col">
+            <div className="bar-track">
+              <motion.div
+                className="bar-fill"
+                initial={{ height: "5%" }}
+                animate={inView ? { height: `${pct}%` } : { height: "5%" }}
+                transition={{ delay: i * (is30d ? 0.02 : 0.05), type: "spring", stiffness: 200, damping: 22 }}
+                title={tooltip}
+              />
+            </div>
+            <span className="bar-lbl">{label}</span>
           </div>
-          <span className="bar-lbl">{bar.label}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -411,6 +395,25 @@ export default function AdminDashboard() {
     ? ((up / (up + down)) * 5).toFixed(1)
     : "—";
 
+  /* Derived trend labels from real data */
+  const resolutionRate = metrics?.resolution_rate ?? null;
+  const resolutionTrend = resolutionRate === null ? "—"
+    : resolutionRate >= 80 ? "Good"
+    : resolutionRate >= 50 ? "Fair"
+    : "Needs attention";
+  const resolutionTrendDir = resolutionRate === null ? "stable"
+    : resolutionRate >= 80 ? "up"
+    : resolutionRate < 50 ? "down"
+    : "stable";
+
+  const totalVotes = up + down;
+  const csatTrend = totalVotes === 0 ? "No votes yet"
+    : `${totalVotes} vote${totalVotes !== 1 ? "s" : ""}`;
+  const csatTrendDir = csatScore === "—" ? "stable"
+    : parseFloat(csatScore) >= 4 ? "up"
+    : parseFloat(csatScore) < 3 ? "down"
+    : "stable";
+
   /* ── Sidebar items ─────────────────────────────── */
   const SB_ITEMS = [
     { id: "overview",    icon: <LayoutDashboard size={18} />, label: "Overview",       onClick: () => { setTab("overview");    setHdrTab("analytics"); setMobileSb(false); } },
@@ -545,7 +548,8 @@ export default function AdminDashboard() {
                     label: "Total Sessions",
                     value: fmtNum(metrics?.total_sessions),
                     icon: <Users size={20} />,
-                    trend: "+12.4%", trendDir: "up",
+                    trend: metrics ? `${metrics.total_sessions} total` : "Loading…",
+                    trendDir: "stable",
                     path: "M0,25 Q15,5 30,20 T60,10 T100,15",
                     sparkColor: "#b0c6ff",
                   },
@@ -553,7 +557,8 @@ export default function AdminDashboard() {
                     label: "Total Queries",
                     value: fmtNum(metrics?.total_queries),
                     icon: <Activity size={20} />,
-                    trend: "+8.2%", trendDir: "up",
+                    trend: metrics ? `${metrics.escalated_sessions} escalated` : "Loading…",
+                    trendDir: metrics && metrics.escalated_sessions === 0 ? "up" : "stable",
                     path: "M0,20 Q20,25 40,5 T70,15 T100,2",
                     sparkColor: "#b0c6ff",
                   },
@@ -563,7 +568,8 @@ export default function AdminDashboard() {
                     suffix: metrics ? "%" : "",
                     icon: <Sparkles size={20} />,
                     iconClass: "secondary",
-                    trend: "Stable", trendDir: "stable",
+                    trend: resolutionTrend,
+                    trendDir: resolutionTrendDir,
                     path: "M0,15 L20,14 L40,15 L60,14 L80,15 L100,14",
                     sparkColor: "#d0bcff",
                     aiGlow: true,
@@ -573,7 +579,8 @@ export default function AdminDashboard() {
                     value: csatScore,
                     suffix: csatScore !== "—" ? "/5" : "",
                     icon: <ThumbsUp size={20} />,
-                    trend: "-0.1", trendDir: "down",
+                    trend: csatTrend,
+                    trendDir: csatTrendDir,
                     path: "M0,5 Q25,10 50,15 T100,25",
                     sparkColor: "#b0c6ff",
                   },
@@ -1225,8 +1232,8 @@ export default function AdminDashboard() {
                   {[
                     { label: "AI Model",     value: "Gemini 2.5 Flash / Groq Llama", color: "var(--violet)" },
                     { label: "Embeddings",   value: "MiniLM-L6-v2 (384-dim)",        color: "var(--primary)" },
-                    { label: "Vector Store", value: "Qdrant (SQLite fallback)",       color: "var(--cyan)" },
-                    { label: "Database",     value: "SQLite (better-sqlite3)",        color: "var(--green)" },
+                    { label: "Vector Store", value: "Qdrant (cloud, AWS)",            color: "var(--cyan)" },
+                    { label: "Database",     value: "Turso (libSQL cloud)",           color: "var(--green)" },
                   ].map(({ label, value, color }, i) => (
                     <motion.div key={label}
                       style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: "1px solid var(--border)" }}
