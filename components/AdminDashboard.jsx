@@ -8,7 +8,7 @@ import {
   CheckCircle, Trash2, Globe, FileText, FileCode,
   Upload, ThumbsUp, ThumbsDown, Info, AlertCircle,
   AlertTriangle, Filter, Sparkles,
-  Clock, Activity, Menu, X, UserCircle2,
+  Clock, Activity, Menu, X, UserCircle2, LogOut,
 } from "lucide-react";
 import LogoComponent from "@/components/Logo";
 
@@ -252,6 +252,13 @@ export default function AdminDashboard() {
     setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), 3500);
   }, []);
 
+  const handleLogout = useCallback(async () => {
+    try {
+      const res = await fetch("/api/logout", { method: "POST" });
+      if (res.ok) window.location.reload();
+    } catch {}
+  }, []);
+
   const loadAll = useCallback(async () => {
     try {
       const [mRes, eRes, dRes, cRes] = await Promise.all([
@@ -470,7 +477,15 @@ export default function AdminDashboard() {
           </div>
 
           {/* Right actions */}
-          <div className="admin-hdr-actions">
+          <div className="admin-hdr-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button 
+              onClick={handleLogout}
+              className="btn btn-ghost btn-xs"
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px" }}
+            >
+              <LogOut size={12} />
+              <span>Log Out</span>
+            </button>
             <div className="admin-hdr-avatar-wrap">
               <UserCircle2 size={32} strokeWidth={1.5} />
             </div>
