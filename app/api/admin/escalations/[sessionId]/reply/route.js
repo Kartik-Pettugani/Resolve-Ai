@@ -10,8 +10,8 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
     }
     const { sessionId } = await params;
-    addMessage(sessionId, "human", message.trim());
-    resolveEscalation(sessionId);
+    await addMessage(sessionId, "human", message.trim());
+    await resolveEscalation(sessionId);
     return NextResponse.json({ status: "success" });
   } catch (err) {
     console.error("reply error:", err);

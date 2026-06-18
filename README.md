@@ -3,7 +3,7 @@
   <img src="https://img.shields.io/badge/React-19.1-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React" />
   <img src="https://img.shields.io/badge/Gemini_2.5_Flash-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
   <img src="https://img.shields.io/badge/Qdrant-FF6B6B?style=for-the-badge&logo=databricks&logoColor=white" alt="Qdrant" />
-  <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/Turso-121212?style=for-the-badge&logo=turso&logoColor=4FF8D2" alt="Turso" />
 </p>
 
 <h1 align="center">Resolve AI</h1>
@@ -112,7 +112,7 @@ Thumbs-up (`+1`) and thumbs-down (`-1`) on every AI response. **Negative feedbac
 ├────────────────────────────────────────────────────────┤
 │                     Storage Layer                      │
 │  ┌────────────────────┐  ┌──────────────────────────┐  │
-│  │  Qdrant Cloud/Local│  │  SQLite (better-sqlite3) │  │
+│  │  Qdrant Cloud/Local│  │  Turso (libSQL Cloud)    │  │
 │  │  (Vector Search)   │  │  (Sessions, Messages,    │  │
 │  │  support_chunks    │  │   Escalations, Docs,     │  │
 │  │  384-dim / Cosine  │  │   Chunks, Settings)      │  │
@@ -141,7 +141,7 @@ The system uses a **three-tier fallback chain** to guarantee a response is alway
 | **Fallback LLM** | Groq (Llama 3.1-8B-Instant) | OpenAI-compatible fallback endpoint |
 | **Embeddings** | Xenova/all-MiniLM-L6-v2 | 384-dimensional sentence embeddings (runs locally) |
 | **Vector DB** | Qdrant (Cloud or Local) | Cosine similarity search over document chunks |
-| **Relational DB** | SQLite (better-sqlite3) | Sessions, messages, escalations, documents, settings |
+| **Relational DB** | Turso (libSQL) | Cloud-hosted SQLite-compatible database for persistent sessions, messages, escalations |
 | **PDF Parsing** | pdf-parse | Extract text from uploaded PDF files |
 | **Web Scraping** | Cheerio | Extract content from documentation URLs |
 | **Icons** | Lucide React | Consistent icon system across the UI |
@@ -184,12 +184,16 @@ Edit `.env.local`:
 GEMINI_API_KEY=your_gemini_api_key_here
 GROQ_API_KEY=your_groq_api_key_here
 
+# Required — Turso cloud database for persistent storage
+TURSO_DATABASE_URL=libsql://your-database-name.turso.io
+TURSO_AUTH_TOKEN=your_turso_auth_token_here
+
 # Optional — Qdrant for production-grade vector search
 QDRANT_URL=https://your-cluster.aws.qdrant.io:6333
 QDRANT_API_KEY=your_qdrant_api_key_here
 ```
 
-> **Note:** If no API keys are provided, the system falls back to a template-based answer generator using the best-matching knowledge base chunk.
+> **Note:** If no API keys are provided, the system falls back to a template-based answer generator using the best-matching knowledge base chunk. If `TURSO_DATABASE_URL` is not set, the system falls back to a local SQLite file.
 
 ### 4. Start the Development Server
 
@@ -275,11 +279,10 @@ resolve-ai/
 │   └── Logo.jsx                  # Brand logo component
 ├── lib/
 │   ├── rag.js                    # RAG pipeline: embed, retrieve, generate
-│   ├── db.js                     # SQLite schema, CRUD, analytics queries
+│   ├── db.js                     # Turso/libSQL client: schema, CRUD, analytics queries
 │   ├── qdrant.js                 # Qdrant client: upsert, search, delete
 │   └── ingestion.js              # Text extraction, chunking, doc ID generation
-├── data/
-│   └── support_agent.db          # SQLite database (auto-created, gitignored)
+├── data/                          # Local SQLite fallback (when TURSO_DATABASE_URL not set)
 ├── .env.local.example            # Environment variable template
 ├── instrumentation.js            # Next.js instrumentation hook
 ├── next.config.mjs               # Next.js configuration

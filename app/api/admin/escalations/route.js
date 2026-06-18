@@ -4,5 +4,5 @@ import { getAllEscalations } from "@/lib/db";
 export const runtime = "nodejs";
 
 export async function GET() {
-  return NextResponse.json(getAllEscalations());
+  return NextResponse.json(await getAllEscalations());
 }

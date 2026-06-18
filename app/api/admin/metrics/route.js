@@ -4,5 +4,5 @@ import { getAnalyticsMetrics } from "@/lib/db";
 export const runtime = "nodejs";
 
 export async function GET() {
-  return NextResponse.json(getAnalyticsMetrics());
+  return NextResponse.json(await getAnalyticsMetrics());
 }

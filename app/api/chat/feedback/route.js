@@ -13,18 +13,18 @@ export async function POST(request) {
       return NextResponse.json({ error: "feedback must be -1, 0, or 1" }, { status: 400 });
     }
 
-    const msg = updateMessageFeedback(messageId, feedback);
+    const msg = await updateMessageFeedback(messageId, feedback);
     if (!msg) {
       return NextResponse.json({ error: "Message not found" }, { status: 404 });
     }
 
     if (feedback === -1 && msg.sender === "ai") {
-      const history = getSessionMessages(msg.session_id);
+      const history = await getSessionMessages(msg.session_id);
       const summary = history
         .slice(-8)
         .map((m) => `${m.sender.toUpperCase()}: ${m.content}`)
         .join("\n");
-      createEscalation(
+      await createEscalation(
         msg.session_id,
         "negative_feedback",
         `Escalated due to thumbs-down feedback on AI response.\nConversation:\n${summary}`,

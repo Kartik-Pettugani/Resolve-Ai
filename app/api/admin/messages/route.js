@@ -14,7 +14,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "session_id and message are required" }, { status: 400 });
     }
 
-    const messageId = addMessage(sessionId, sender, message);
+    const messageId = await addMessage(sessionId, sender, message);
     return NextResponse.json({ status: "success", message_id: messageId });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Failed to add message" }, { status: 500 });

@@ -14,12 +14,12 @@ export async function POST(request) {
       return NextResponse.json({ error: "session_id and message are required" }, { status: 400 });
     }
 
-    const session = getOrCreateSession(sessionId);
-    addMessage(sessionId, "user", userMessage);
+    const session = await getOrCreateSession(sessionId);
+    await addMessage(sessionId, "user", userMessage);
 
     if (session.status === "human") {
       const humanReply = "You are connected to human support. I am reviewing your previous context now.";
-      addMessage(sessionId, "human", humanReply);
+      await addMessage(sessionId, "human", humanReply);
       return NextResponse.json({
         response: humanReply,
         escalated: true,

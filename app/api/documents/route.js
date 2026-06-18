@@ -4,7 +4,7 @@ import { deleteDocument, getAllDocuments } from "@/lib/db";
 export const runtime = "nodejs";
 
 export async function GET() {
-  return NextResponse.json(getAllDocuments());
+  return NextResponse.json(await getAllDocuments());
 }
 
 export async function DELETE(request) {

@@ -9,8 +9,8 @@ export async function GET(request) {
     return NextResponse.json({ error: "session_id is required" }, { status: 400 });
   }
 
-  const session = getOrCreateSession(sessionId);
-  const messages = getSessionMessages(sessionId);
+  const session = await getOrCreateSession(sessionId);
+  const messages = await getSessionMessages(sessionId);
 
   return NextResponse.json({
     session_id: sessionId,

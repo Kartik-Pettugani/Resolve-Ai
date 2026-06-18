@@ -34,7 +34,7 @@ export async function POST(request) {
       });
     }
 
-    addDocument({ id: docId, name, type: docType, content: text });
+    await addDocument({ id: docId, name, type: docType, content: text });
     await addChunks(dbChunks);
 
     return NextResponse.json({ status: "success", document_id: docId, chunks_count: chunks.length });
