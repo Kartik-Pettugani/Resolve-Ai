@@ -8,7 +8,6 @@ import {
   FileText, DollarSign, Package, Settings,
   ChevronRight, Bot, LogOut, Plus, Loader2,
 } from "lucide-react";
-import Link from "next/link";
 import Logo from "@/components/Logo";
 import ReactMarkdown from "react-markdown";
 
@@ -206,9 +205,6 @@ export default function ChatInterface({ sessionId }) {
         >
           <Plus size={12} /> <span>New Chat</span>
         </button>
-        <Link href="/admin" className="admin-console-link">
-          <Settings size={12} /> <span>Admin Console</span>
-        </Link>
         <button 
           onClick={handleLogout}
           className="admin-console-link danger"
