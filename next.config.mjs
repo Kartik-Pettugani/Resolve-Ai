@@ -5,7 +5,7 @@ const nextConfig = {
       bodySizeLimit: "10mb"
     }
   },
-  serverExternalPackages: ["@xenova/transformers"]
+  serverExternalPackages: ["@xenova/transformers", "@libsql/client"]
 };
 
 export default nextConfig;
