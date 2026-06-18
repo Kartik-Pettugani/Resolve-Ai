@@ -8,7 +8,7 @@ import {
   CheckCircle, Trash2, Globe, FileText, FileCode,
   Upload, ThumbsUp, ThumbsDown, Info, AlertCircle,
   AlertTriangle, Filter, Sparkles,
-  Clock, Activity, Menu, X, UserCircle2,
+  Clock, Activity, Menu, X, UserCircle2, LogOut,
 } from "lucide-react";
 import LogoComponent from "@/components/Logo";
 
@@ -71,23 +71,40 @@ function Sparkline({ path, color = "#b0c6ff" }) {
 /* ══════════════════════════════════════════════
    BAR CHART
 ══════════════════════════════════════════════ */
-function BarChart({ data }) {
+function getBarLabel(dateStr, is30d) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    if (is30d) {
+      return d.toLocaleDateString([], { day: "numeric" });
+    } else {
+      return d.toLocaleDateString([], { weekday: "short" }).toUpperCase();
+    }
+  } catch {
+    return dateStr;
+  }
+}
+
+function BarChart({ data, is30d }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
-  const entries = data ? Object.entries(data).sort(([a], [b]) => a.localeCompare(b)).slice(-7) : [];
+  const limit = is30d ? 30 : 7;
+  const entries = data ? Object.entries(data).sort(([a], [b]) => a.localeCompare(b)).slice(-limit) : [];
   const max = entries.length ? Math.max(...entries.map(([, v]) => v), 1) : 1;
   const hasData = entries.length > 0;
 
-  const slots = hasData ? entries : Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - (6 - i));
+  const slots = hasData ? entries : Array.from({ length: limit }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - ((limit - 1) - i));
     return [d.toISOString().slice(0, 10), 0];
   });
 
   return (
-    <div className="bar-chart-wrap" ref={ref}>
+    <div className="bar-chart-wrap" style={{ gap: is30d ? "4px" : "12px" }} ref={ref}>
       {slots.map(([date, count], i) => {
-        const label = new Date(date + "T12:00:00").toLocaleDateString("en", { weekday: "short" }).toUpperCase().slice(0, 3);
+        const label = getBarLabel(date, is30d);
         const pct   = hasData ? Math.max(5, (count / max) * 100) : 5;
+        const tooltip = `${date}: ${count} quer${count === 1 ? "y" : "ies"}`;
         return (
           <div key={date} className="bar-col">
             <div className="bar-track">
@@ -95,8 +112,8 @@ function BarChart({ data }) {
                 className="bar-fill"
                 initial={{ height: "5%" }}
                 animate={inView ? { height: `${pct}%` } : { height: "5%" }}
-                transition={{ delay: i * .05, type: "spring", stiffness: 200, damping: 22 }}
-                title={`${label}: ${count} quer${count === 1 ? "y" : "ies"}`}
+                transition={{ delay: i * (is30d ? 0.02 : 0.05), type: "spring", stiffness: 200, damping: 22 }}
+                title={tooltip}
               />
             </div>
             <span className="bar-lbl">{label}</span>
@@ -233,6 +250,9 @@ const AVATAR_COLORS = [
 export default function AdminDashboard() {
   const [tab,           setTab]           = useState("overview");
   const [hdrTab,        setHdrTab]        = useState("analytics");
+  const [chartPeriod,   setChartPeriod]   = useState("7d");
+  const [expandedSession, setExpandedSession] = useState(null);
+  const [reasonFilter,    setReasonFilter]  = useState("all");
   const [escalView,     setEscalView]     = useState("active");
   const [metrics,       setMetrics]       = useState(null);
   const [escalations,   setEscalations]   = useState([]);
@@ -255,10 +275,17 @@ export default function AdminDashboard() {
     setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), 3500);
   }, []);
 
+  const handleLogout = useCallback(async () => {
+    try {
+      const res = await fetch("/api/logout", { method: "POST" });
+      if (res.ok) window.location.reload();
+    } catch {}
+  }, []);
+
   const loadAll = useCallback(async () => {
     try {
       const [mRes, eRes, dRes, cRes] = await Promise.all([
-        fetch("/api/admin/metrics"),
+        fetch(`/api/admin/metrics?period=${chartPeriod}`),
         fetch("/api/admin/escalations"),
         fetch("/api/documents"),
         fetch("/api/admin/config"),
@@ -268,7 +295,7 @@ export default function AdminDashboard() {
       if (dRes.ok) setDocuments(await dRes.json());
       if (cRes.ok) { const c = await cRes.json(); setThreshold(c.confidence_threshold); }
     } catch {}
-  }, []);
+  }, [chartPeriod]);
 
   useEffect(() => {
     loadAll();
@@ -492,7 +519,15 @@ export default function AdminDashboard() {
           </div>
 
           {/* Right actions */}
-          <div className="admin-hdr-actions">
+          <div className="admin-hdr-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button 
+              onClick={handleLogout}
+              className="btn btn-ghost btn-xs"
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px" }}
+            >
+              <LogOut size={12} />
+              <span>Log Out</span>
+            </button>
             <div className="admin-hdr-avatar-wrap">
               <UserCircle2 size={32} strokeWidth={1.5} />
             </div>
@@ -549,6 +584,14 @@ export default function AdminDashboard() {
                     path: "M0,5 Q25,10 50,15 T100,25",
                     sparkColor: "#b0c6ff",
                   },
+                  {
+                    label: "Resolved Queries",
+                    value: fmtNum(metrics?.resolved_escalations),
+                    icon: <CheckCircle size={20} />,
+                    trend: "Verified", trendDir: "up",
+                    path: "M0,10 L25,12 L50,15 L75,22 L100,28",
+                    sparkColor: "#34d399",
+                  },
                 ].map(({ label, value, suffix = "", icon, iconClass, trend, trendDir, path, sparkColor, aiGlow }, i) => (
                   <motion.div
                     key={label}
@@ -585,26 +628,37 @@ export default function AdminDashboard() {
                       <BarChart2 size={14} style={{ color: "var(--primary)" }} /> Query Analytics
                     </span>
                     <div style={{ display: "flex", gap: 4 }}>
-                      {["7D", "30D"].map((l, i) => (
-                        <button key={l} style={{
-                          padding: "3px 10px",
-                          fontSize: ".625rem",
-                          fontFamily: "'JetBrains Mono', monospace",
-                          background: i === 0 ? "rgba(84,23,190,.15)" : "transparent",
-                          border: "1px solid",
-                          borderColor: i === 0 ? "rgba(84,23,190,.3)" : "transparent",
-                          borderRadius: 4,
-                          color: i === 0 ? "var(--secondary)" : "var(--text-3)",
-                          cursor: "pointer",
-                        }}>
-                          {l}
-                        </button>
-                      ))}
+                      {[
+                        { id: "7d", label: "7D" },
+                        { id: "30d", label: "30D" }
+                      ].map((item) => {
+                        const active = chartPeriod === item.id;
+                        return (
+                          <button 
+                            key={item.id} 
+                            onClick={() => setChartPeriod(item.id)}
+                            style={{
+                              padding: "3px 10px",
+                              fontSize: ".625rem",
+                              fontFamily: "'JetBrains Mono', monospace",
+                              background: active ? "rgba(84,23,190,.15)" : "transparent",
+                              border: "1px solid",
+                              borderColor: active ? "rgba(84,23,190,.3)" : "transparent",
+                              borderRadius: 4,
+                              color: active ? "var(--secondary)" : "var(--text-3)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className="card-body" style={{ minHeight: 220 }}>
-                    <BarChart data={metrics?.query_trend} />
+                    <BarChart data={metrics?.query_trend} is30d={chartPeriod === "30d"} />
                   </div>
+
                 </motion.div>
 
                 {/* Donut chart */}
@@ -709,6 +763,49 @@ export default function AdminDashboard() {
                 </div>
               </motion.div>
 
+              {/* Top Unanswered Questions */}
+              <motion.div className="card" variants={fadeUp} style={{ marginTop: 24 }}>
+                <div className="card-header">
+                  <span className="card-title">
+                    <AlertCircle size={14} style={{ color: "var(--amber)" }} /> Top Unanswered & Low Confidence Questions
+                  </span>
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className="fb-table">
+                    <thead>
+                      <tr>
+                        <th>Unresolved Query</th>
+                        <th>Classified Topic</th>
+                        <th className="right">Escalation Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metrics?.unanswered_queries && metrics.unanswered_queries.length > 0 ? (
+                        metrics.unanswered_queries.map((q, i) => (
+                          <tr key={i} style={{ transition: "all .2s" }}>
+                            <td style={{ fontFamily: "Inter, sans-serif", fontSize: ".875rem", color: "var(--text)" }}>
+                              &ldquo;{q.query}&rdquo;
+                            </td>
+                            <td>
+                              <span className="badge badge-indigo">{q.topic || "General"}</span>
+                            </td>
+                            <td className="right" style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: ".875rem", fontWeight: 700, color: "var(--amber)" }}>
+                              {q.count}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} style={{ textAlign: "center", padding: "32px", color: "var(--text-3)", fontFamily: "Inter, sans-serif", fontSize: ".875rem" }}>
+                            No unanswered or low confidence questions recorded.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+
               {/* Escalation by topic */}
               {metrics?.topics && Object.keys(metrics.topics).length > 0 && (
                 <motion.div className="card" variants={fadeUp} style={{ marginTop: 24 }}>
@@ -795,25 +892,42 @@ export default function AdminDashboard() {
                     )}
                   </button>
                 ))}
-                <button style={{
-                  marginLeft: "auto",
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "7px 14px",
-                  background: "transparent",
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: ".75rem",
-                  color: "var(--text-3)",
-                  cursor: "pointer",
-                }}>
-                  <Filter size={13} /> Filters
-                </button>
+                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+                  <Filter size={13} style={{ color: "var(--text-3)" }} />
+                  <select 
+                    value={reasonFilter}
+                    onChange={(ev) => setReasonFilter(ev.target.value)}
+                    style={{
+                      background: "rgba(255,255,255,.03)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 8,
+                      padding: "6px 14px 6px 10px",
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: ".75rem",
+                      color: "var(--text-2)",
+                      cursor: "pointer",
+                      outline: "none",
+                      appearance: "none",
+                      backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(194,198,216,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
+                      backgroundRepeat: "no-repeat",
+                      backgroundPosition: "right 8px center",
+                      backgroundSize: "12px",
+                      paddingRight: "26px"
+                    }}
+                  >
+                    <option value="all" style={{ background: "var(--bg)" }}>All Reasons</option>
+                    <option value="low_confidence" style={{ background: "var(--bg)" }}>Low Confidence</option>
+                    <option value="out_of_scope" style={{ background: "var(--bg)" }}>Out of Scope</option>
+                    <option value="negative_feedback" style={{ background: "var(--bg)" }}>Neg. Feedback</option>
+                  </select>
+                </div>
               </motion.div>
 
               {/* Escalation cards grid */}
               {(() => {
-                const list = escalView === "active" ? pending : resolved;
+                const baseList = escalView === "active" ? pending : resolved;
+                const list = baseList.filter((e) => reasonFilter === "all" || e.reason === reasonFilter);
+
                 if (!list.length) {
                   return (
                     <motion.div variants={fadeUp} className="card" style={{ padding: "48px 24px", textAlign: "center" }}>
@@ -847,8 +961,49 @@ export default function AdminDashboard() {
                           {/* Reason */}
                           <div className="esc-card-reason">
                             <span className="esc-reason-label">Escalation Reason</span>
-                            <span className="esc-reason-text">
-                              {reasonLabel(e.reason)} — {(e.summary || "").slice(0, 90)}
+                            <span className="esc-reason-text" style={{ display: "block", marginTop: "4px" }}>
+                              <strong>{reasonLabel(e.reason)}</strong>
+                              {e.summary && (
+                                <span style={{ display: "block", marginTop: "4px" }}>
+                                  {expandedSession === e.session_id ? (
+                                    <div 
+                                      className="esc-summary-expanded" 
+                                      style={{ 
+                                        padding: "10px", 
+                                        background: "rgba(0,0,0,0.25)", 
+                                        borderRadius: "6px", 
+                                        border: "1px solid var(--border)", 
+                                        whiteSpace: "pre-wrap", 
+                                        color: "var(--text-2)",
+                                        fontSize: "0.8125rem",
+                                        lineHeight: "1.4",
+                                        marginTop: "6px",
+                                        marginBottom: "6px"
+                                      }}
+                                    >
+                                      {e.summary}
+                                    </div>
+                                  ) : (
+                                    <span> — {(e.summary || "").slice(0, 90)}...</span>
+                                  )}
+                                  <button 
+                                    onClick={() => setExpandedSession(expandedSession === e.session_id ? null : e.session_id)}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      color: "var(--primary)",
+                                      fontSize: "0.6875rem",
+                                      fontFamily: "'JetBrains Mono', monospace",
+                                      cursor: "pointer",
+                                      padding: "2px 0",
+                                      display: "inline-block",
+                                      textDecoration: "underline",
+                                    }}
+                                  >
+                                    {expandedSession === e.session_id ? "Show Less" : "Expand Summary"}
+                                  </button>
+                                </span>
+                              )}
                             </span>
                           </div>
 

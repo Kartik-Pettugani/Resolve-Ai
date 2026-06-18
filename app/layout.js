@@ -1,19 +1,35 @@
+import { Geist, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  weight: ["600", "700", "800", "900"],
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  weight: ["400", "500", "600"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["500", "600"],
+});
 
 export const metadata = {
   title: "Resolve AI",
-  description: "AI-powered customer support agent with RAG and escalation"
+  description: "AI-powered customer support agent with RAG and escalation",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@600;700;800;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html 
+      lang="en" 
+      className={`${geist.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

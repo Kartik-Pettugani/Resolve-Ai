@@ -91,7 +91,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 14px;
   line-height: 1.6;
   color: var(--text);
@@ -103,8 +103,8 @@ body {
 }
 
 /* ── Font utilities ───────────────────────────── */
-.font-geist    { font-family: 'Geist', 'Inter', sans-serif; }
-.font-mono     { font-family: 'JetBrains Mono', monospace; }
+.font-geist    { font-family: var(--font-geist), 'Geist', 'Inter', sans-serif; }
+.font-mono     { font-family: var(--font-mono), 'JetBrains Mono', monospace; }
 
 /* ── Scrollbar ───────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -116,26 +116,26 @@ body {
    TYPOGRAPHY
 ══════════════════════════════════════════════ */
 h1 {
-  font-family: 'Geist', sans-serif;
+  font-family: var(--font-geist), 'Geist', sans-serif;
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -.03em;
 }
 h2 {
-  font-family: 'Geist', sans-serif;
+  font-family: var(--font-geist), 'Geist', sans-serif;
   font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: -.025em;
 }
 h3 {
-  font-family: 'Geist', sans-serif;
+  font-family: var(--font-geist), 'Geist', sans-serif;
   font-size: .9375rem;
   font-weight: 600;
   letter-spacing: -.015em;
 }
 
 .gradient-text {
-  font-family: 'Geist', sans-serif;
+  font-family: var(--font-geist), 'Geist', sans-serif;
   background: var(--grad-text);
   -webkit-background-clip: text;
   background-clip: text;
@@ -610,7 +610,57 @@ textarea.input { resize: none; }
   font-size: .875rem;
   line-height: 1.65;
   word-break: break-word;
+  white-space: pre-wrap;
 }
+
+/* Markdown rendering inside chat bubbles */
+.msg-bubble p:not(:last-child) {
+  margin-bottom: 8px;
+}
+.msg-bubble ul, .msg-bubble ol {
+  margin-left: 20px;
+  margin-bottom: 8px;
+}
+.msg-bubble li {
+  margin-bottom: 4px;
+}
+.msg-bubble strong {
+  font-weight: 600;
+  color: #fff;
+}
+.msg-bubble code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--primary);
+}
+.msg-bubble pre {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 14px;
+  border-radius: 6px;
+  overflow-x: auto;
+  border: 1px solid var(--border-2);
+}
+.msg-bubble pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  color: var(--text-2);
+}
+.msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+  font-family: 'Geist', sans-serif;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  color: #fff;
+}
+.msg-bubble h1 { font-size: 1.15rem; }
+.msg-bubble h2 { font-size: 1.05rem; }
+.msg-bubble h3 { font-size: 0.95rem; }
+
 
 /* User messages: electric blue */
 .msg-user .msg-bubble {
@@ -1490,7 +1540,7 @@ textarea.input { resize: none; }
 /* KPI cards grid */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 24px;
   margin-bottom: 24px;
 }
@@ -2241,6 +2291,30 @@ textarea.input { resize: none; }
   .stream-table th, .stream-table td { padding: 8px 12px; }
 }
 
+.admin-console-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--text-2);
+  text-decoration: none;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+.admin-console-link:hover {
+  border-color: var(--border-2);
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+.admin-console-link.danger:hover {
+  color: var(--red);
+}
+
 /* ══════════════════════════════════════════════
    RESPONSIVE — CHAT
 ══════════════════════════════════════════════ */
@@ -2262,4 +2336,12 @@ textarea.input { resize: none; }
 @media (max-width: 360px) {
   .admin-hdr-tabs { gap: 8px; }
   .admin-hdr-tab { font-size: .6875rem; }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

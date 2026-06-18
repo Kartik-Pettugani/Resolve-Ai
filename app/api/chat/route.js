@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addMessage, getOrCreateSession } from "@/lib/db";
+import { addMessage, getOrCreateSession, getSessionMessages } from "@/lib/db";
 import { processSupportQuery } from "@/lib/rag";
 
 export const runtime = "nodejs";
@@ -19,7 +19,11 @@ export async function POST(request) {
 
     if (session.status === "human") {
       const humanReply = "You are connected to human support. I am reviewing your previous context now.";
-      await addMessage(sessionId, "human", humanReply);
+      const history = await getSessionMessages(sessionId);
+      const existingHumanMsg = history.find((m) => m.sender === "human");
+      if (!existingHumanMsg) {
+        await addMessage(sessionId, "human", humanReply);
+      }
       return NextResponse.json({
         response: humanReply,
         escalated: true,

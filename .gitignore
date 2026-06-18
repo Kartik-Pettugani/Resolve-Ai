@@ -22,8 +22,9 @@ yarn-error.log*
 .vercel
 
 # SQLite database files and SQLite temp journals
-/data/*.db
-/data/*.db-journal
-/data/*.db-wal
-/data/*.db-shm
-data/support_agent.db
+data/
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+

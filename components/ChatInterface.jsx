@@ -6,10 +6,11 @@ import {
   Send, ThumbsUp, ThumbsDown, Sparkles, User,
   Zap, CheckCircle, AlertCircle, Info,
   FileText, DollarSign, Package, Settings,
-  ChevronRight, Bot,
+  ChevronRight, Bot, LogOut, Plus, Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import ReactMarkdown from "react-markdown";
 
 const MAX_CHARS = 2000;
 
@@ -85,6 +86,18 @@ export default function ChatInterface({ sessionId }) {
     const id = Date.now();
     setToasts((p) => [...p, { id, msg, type }]);
     setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), 3500);
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      const res = await fetch("/api/logout", { method: "POST" });
+      if (res.ok) window.location.reload();
+    } catch {}
+  }, []);
+
+  const handleNewConversation = useCallback(() => {
+    localStorage.removeItem("resolve_session_id");
+    window.location.reload();
   }, []);
 
   const scrollBottom = useCallback(() => {
@@ -186,23 +199,23 @@ export default function ChatInterface({ sessionId }) {
           Support
         </span>
       </div>
-      <Link href="/admin" className="admin-console-link" style={{
-        display: "flex", alignItems: "center", gap: 6,
-        padding: "6px 14px",
-        background: "rgba(255,255,255,.03)",
-        border: "1px solid var(--border)",
-        borderRadius: 8,
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: ".6875rem",
-        color: "var(--text-2)",
-        textDecoration: "none",
-        transition: "all .15s",
-      }}
-        onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--border-2)"; e.currentTarget.style.color = "var(--primary)"; }}
-        onMouseOut={(e)  => { e.currentTarget.style.borderColor = "var(--border)";   e.currentTarget.style.color = "var(--text-2)"; }}
-      >
-        <Settings size={12} /> <span>Admin Console</span>
-      </Link>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button 
+          onClick={handleNewConversation}
+          className="admin-console-link"
+        >
+          <Plus size={12} /> <span>New Chat</span>
+        </button>
+        <Link href="/admin" className="admin-console-link">
+          <Settings size={12} /> <span>Admin Console</span>
+        </Link>
+        <button 
+          onClick={handleLogout}
+          className="admin-console-link danger"
+        >
+          <LogOut size={12} /> <span>Log Out</span>
+        </button>
+      </div>
     </div>
   );
 
@@ -238,7 +251,7 @@ export default function ChatInterface({ sessionId }) {
           whileTap={{ scale: .92 }}
           aria-label="Send"
         >
-          <ChevronRight size={16} />
+          {sending ? <Loader2 size={16} className="spinner" /> : <ChevronRight size={16} />}
         </motion.button>
       </form>
       <div className="composer-v2-footer">
@@ -401,7 +414,9 @@ export default function ChatInterface({ sessionId }) {
                     variants={msgVariants}
                     layout
                   >
-                    <div className="msg-bubble">{msg.content}</div>
+                    <div className="msg-bubble">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
                     <div className="msg-meta">
                       {msg.sender !== "user" && (
                         <span className="msg-sender">{senderLabel(msg.sender)}</span>
@@ -476,13 +491,16 @@ export default function ChatInterface({ sessionId }) {
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: .92 }}
               >
-                <ChevronRight size={16} />
+                {sending ? <Loader2 size={16} className="spinner" /> : <ChevronRight size={16} />}
               </motion.button>
             </div>
             <div className="composer-v2-footer" style={{ padding: "5px 2px 0" }}>
               <span className="engine-label"><Zap size={8} /> Resolve-v2 Engine</span>
               <span className="char-count-label">{input.length}/{MAX_CHARS}</span>
             </div>
+            <p className="disclaimer-v2" style={{ marginTop: "4px" }}>
+              AI may display inaccurate info. Always check important facts.
+            </p>
           </div>
         </div>
       </div>

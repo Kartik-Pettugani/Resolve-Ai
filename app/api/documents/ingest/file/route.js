@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addChunks, addDocument } from "@/lib/db";
+import { addChunks, addDocument, getDocument } from "@/lib/db";
 import { createDocId, extractTextFromFile, splitTextIntoChunks } from "@/lib/ingestion";
 import { getEmbedding } from "@/lib/rag";
 
@@ -21,6 +21,14 @@ export async function POST(request) {
     const lname = name.toLowerCase();
     const docType = lname.endsWith(".pdf") ? "pdf" : lname.endsWith(".md") || lname.endsWith(".markdown") ? "md" : "txt";
     const docId = createDocId(`${name}:${text.slice(0, 400)}`);
+
+    const existing = await getDocument(docId);
+    if (existing) {
+      return NextResponse.json(
+        { error: "Document already ingested. Delete it first to re-upload." },
+        { status: 409 }
+      );
+    }
 
     const dbChunks = [];
     for (let i = 0; i < chunks.length; i += 1) {
