@@ -300,14 +300,3 @@ The UI uses a custom **Zinc/Slate dark theme** with:
 - **Glass Panels**: Semi-transparent surfaces with subtle border treatments
 - **Animations**: Spring-based Framer Motion transitions throughout
 
----
-
-## 📄 License
-
-This project was built as part of **Assignment 1 — AI-Powered Customer Support Agent** (GenAI Course).
-
----
-
-<p align="center">
-  Built with ❤️ using Next.js, Gemini, and Qdrant
-</p>
