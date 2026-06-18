@@ -267,6 +267,7 @@ export default function AdminDashboard() {
   const [tab,           setTab]           = useState("overview");
   const [hdrTab,        setHdrTab]        = useState("analytics");
   const [chartPeriod,   setChartPeriod]   = useState("7d");
+  const [expandedSession, setExpandedSession] = useState(null);
   const [escalView,     setEscalView]     = useState("active");
   const [metrics,       setMetrics]       = useState(null);
   const [escalations,   setEscalations]   = useState([]);
@@ -884,8 +885,49 @@ export default function AdminDashboard() {
                           {/* Reason */}
                           <div className="esc-card-reason">
                             <span className="esc-reason-label">Escalation Reason</span>
-                            <span className="esc-reason-text">
-                              {reasonLabel(e.reason)} — {(e.summary || "").slice(0, 90)}
+                            <span className="esc-reason-text" style={{ display: "block", marginTop: "4px" }}>
+                              <strong>{reasonLabel(e.reason)}</strong>
+                              {e.summary && (
+                                <span style={{ display: "block", marginTop: "4px" }}>
+                                  {expandedSession === e.session_id ? (
+                                    <div 
+                                      className="esc-summary-expanded" 
+                                      style={{ 
+                                        padding: "10px", 
+                                        background: "rgba(0,0,0,0.25)", 
+                                        borderRadius: "6px", 
+                                        border: "1px solid var(--border)", 
+                                        whiteSpace: "pre-wrap", 
+                                        color: "var(--text-2)",
+                                        fontSize: "0.8125rem",
+                                        lineHeight: "1.4",
+                                        marginTop: "6px",
+                                        marginBottom: "6px"
+                                      }}
+                                    >
+                                      {e.summary}
+                                    </div>
+                                  ) : (
+                                    <span> — {(e.summary || "").slice(0, 90)}...</span>
+                                  )}
+                                  <button 
+                                    onClick={() => setExpandedSession(expandedSession === e.session_id ? null : e.session_id)}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      color: "var(--primary)",
+                                      fontSize: "0.6875rem",
+                                      fontFamily: "'JetBrains Mono', monospace",
+                                      cursor: "pointer",
+                                      padding: "2px 0",
+                                      display: "inline-block",
+                                      textDecoration: "underline",
+                                    }}
+                                  >
+                                    {expandedSession === e.session_id ? "Show Less" : "Expand Summary"}
+                                  </button>
+                                </span>
+                              )}
                             </span>
                           </div>
 
