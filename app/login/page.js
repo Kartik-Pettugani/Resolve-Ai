@@ -149,6 +149,106 @@ export default function LoginPage() {
             {!loading && <ArrowRight size={16} />}
           </button>
         </form>
+
+        {/* Test Credentials Section */}
+        <div
+          style={{
+            marginTop: "24px",
+            padding: "16px",
+            background: "rgba(99, 102, 241, 0.06)",
+            border: "1px solid rgba(99, 102, 241, 0.15)",
+            borderRadius: "var(--r-sm)",
+          }}
+        >
+          <p
+            style={{
+              fontSize: "0.6875rem",
+              fontFamily: "'JetBrains Mono', monospace",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "var(--primary)",
+              marginBottom: "12px",
+              fontWeight: 600,
+            }}
+          >
+            🧪 Test Credentials
+          </p>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("user@resolve.ai");
+                setPassword("Resolve@123");
+                setError("");
+              }}
+              style={{
+                flex: 1,
+                padding: "10px 8px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--r-sm)",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)";
+                e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+              }}
+            >
+              <span style={{ fontSize: "0.75rem", color: "var(--text-2)", fontWeight: 600, display: "block", marginBottom: "4px" }}>
+                👤 User
+              </span>
+              <span style={{ fontSize: "0.6875rem", color: "var(--text-3)", display: "block" }}>
+                user@resolve.ai
+              </span>
+              <span style={{ fontSize: "0.6875rem", color: "var(--text-3)", display: "block" }}>
+                Resolve@123
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEmail("admin@resolve.ai");
+                setPassword("Resolve@123");
+                setError("");
+              }}
+              style={{
+                flex: 1,
+                padding: "10px 8px",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--r-sm)",
+                cursor: "pointer",
+                textAlign: "left",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)";
+                e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+              }}
+            >
+              <span style={{ fontSize: "0.75rem", color: "var(--text-2)", fontWeight: 600, display: "block", marginBottom: "4px" }}>
+                🛡️ Admin
+              </span>
+              <span style={{ fontSize: "0.6875rem", color: "var(--text-3)", display: "block" }}>
+                admin@resolve.ai
+              </span>
+              <span style={{ fontSize: "0.6875rem", color: "var(--text-3)", display: "block" }}>
+                Resolve@123
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

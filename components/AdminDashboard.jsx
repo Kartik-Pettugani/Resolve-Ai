@@ -90,30 +90,37 @@ function BarChart({ data, is30d }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
   const limit = is30d ? 30 : 7;
-  const entries = data ? Object.entries(data).sort(([a], [b]) => a.localeCompare(b)).slice(-limit) : [];
-  const max = entries.length ? Math.max(...entries.map(([, v]) => v), 1) : 1;
-  const hasData = entries.length > 0;
 
-  const slots = hasData ? entries : Array.from({ length: limit }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - ((limit - 1) - i));
-    return [d.toISOString().slice(0, 10), 0];
-  });
+  // Build the full date range — API now always returns all days,
+  // but fall back to empty slots if data hasn't loaded yet
+  let slots;
+  if (data && Object.keys(data).length > 0) {
+    slots = Object.entries(data).sort(([a], [b]) => a.localeCompare(b)).slice(-limit);
+  } else {
+    slots = Array.from({ length: limit }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - ((limit - 1) - i));
+      return [d.toISOString().slice(0, 10), 0];
+    });
+  }
+
+  const max = Math.max(...slots.map(([, v]) => v), 1);
 
   return (
     <div className="bar-chart-wrap" style={{ gap: is30d ? "4px" : "12px" }} ref={ref}>
       {slots.map(([date, count], i) => {
         const label = getBarLabel(date, is30d);
-        const pct   = hasData ? Math.max(5, (count / max) * 100) : 5;
+        const pct   = count > 0 ? Math.max(8, (count / max) * 100) : 3;
         const tooltip = `${date}: ${count} quer${count === 1 ? "y" : "ies"}`;
         return (
           <div key={date} className="bar-col">
             <div className="bar-track">
               <motion.div
                 className="bar-fill"
-                initial={{ height: "5%" }}
-                animate={inView ? { height: `${pct}%` } : { height: "5%" }}
+                initial={{ height: "0%" }}
+                animate={inView ? { height: `${pct}%` } : { height: "0%" }}
                 transition={{ delay: i * (is30d ? 0.02 : 0.05), type: "spring", stiffness: 200, damping: 22 }}
                 title={tooltip}
+                style={count === 0 ? { opacity: 0.25 } : {}}
               />
             </div>
             <span className="bar-lbl">{label}</span>
